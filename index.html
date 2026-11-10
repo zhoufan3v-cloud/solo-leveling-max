@@ -12875,47 +12875,75 @@ window.TOWER={open:openTower,state:()=>S,cfg:TW_CFG,floors:FLOORS};
 
 </script>
 <script>
-/* SOLO MAX 100 — نظام التحديثات: الإصدار الحالي + سجل التحديثات + فحص إصدار جديد + شاشة تحميل */
+/* SOLO MAX 100 — نظام التحديثات: الإصدار + السجل + فحص إصدار جديد + شاشة تثبيت */
 const CURRENT_GAME_VERSION = "1.3.0";
 const GAME_UPDATES = [
  {v:"1.1.0",t:"تطوير الزعماء",n:["كل زعيم لفله 10 أو أقل: 3 ضربات و4 مهارات على الأقل","تزيد الضربات والمهارات وصعوبة التفادي مع رفع اللفل","شريط دم زعيم البرج يظهر أعلى الوسط"]},
  {v:"1.2.0",t:"برج التحديات 16–20",n:["5 طوابق جديدة في الصحراء والعناكب","زعماء: حارس العش، ملك العقارب، ساحر الرمال، فارس العناكب الأسود، ملكة العناكب"]},
- {v:"1.3.0",t:"نظام التحديثات",n:["خانة «حول اللعبة» تعرض الإصدار وعدد التحديثات","إشعار عند صدور تحديث جديد مع شاشة تحميل","تبقى كل بياناتك وغنائمك وتجهيزاتك كما هي"]}
+ {v:"1.3.0",t:"نظام التحديثات",n:["خانة «حول اللعبة» تعرض الإصدار وعدد التحديثات","إشعار عند صدور تحديث جديد مع شاشة تثبيت","تبقى كل بياناتك وغنائمك وتجهيزاتك كما هي"]}
 ];
-const VKEY='solomax100_game_version_seen';
+const VKEY='solomax100_game_version_seen',AKEY='solomax100_update_applied';
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const vNum=v=>String(v).split('.').map(x=>parseInt(x)||0);
 const vNewer=(a,b)=>{const A=vNum(a),B=vNum(b);for(let i=0;i<3;i++){if((A[i]||0)!==(B[i]||0))return(A[i]||0)>(B[i]||0)}return false};
+/* الإصدار الفعلي = الأعلى بين نسخة الملف وآخر تحديث ثبّته اللاعب (يمنع تكرار نافذة التحديث بعد التثبيت) */
+const APPLIED=lsGet(AKEY);
+const EFF_VER=(APPLIED&&APPLIED.version&&vNewer(APPLIED.version,CURRENT_GAME_VERSION))?APPLIED.version:CURRENT_GAME_VERSION;
 const esc2=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const notesHTML=l=>'<ul style="margin:8px 0 0;padding:0 18px 0 0;text-align:right;color:#d9c8ee;font-size:13px;line-height:1.8">'+l.map(x=>'<li>'+esc2(x)+'</li>').join('')+'</ul>';
-/* خانة حول اللعبة: الإصدار + عدد التحديثات + السجل */
-window.__aboutVer=function(){return '<div class="card2"><h4>الإصدار '+CURRENT_GAME_VERSION+'</h4><p>عدد التحديثات التي تلعب بها: <b>'+GAME_UPDATES.length+'</b></p>'+GAME_UPDATES.slice().reverse().map(u=>'<p style="margin:10px 0 0"><b>'+u.v+' — '+esc2(u.t)+'</b></p>'+notesHTML(u.n)).join('')+'</div>'};
-function panelBox(inner){const old=document.getElementById('gameForceUpdateOverlay');if(old)old.remove();const o=document.createElement('div');o.id='gameForceUpdateOverlay';o.style.cssText='position:fixed;inset:0;background:rgba(5,3,15,.95);z-index:999999;display:grid;place-items:center;font-family:Cairo,sans-serif;direction:rtl;color:#fff;padding:20px;overflow:auto';const pn=document.createElement('div');pn.style.cssText='background:linear-gradient(#0d0918,#1a113a);border:2px solid #8c52ff;padding:26px;border-radius:20px;text-align:center;width:min(440px,100%);box-sizing:border-box;box-shadow:0 0 40px #8c52ff66';pn.innerHTML=inner;o.appendChild(pn);document.body.appendChild(o);return pn}
+window.__aboutVer=function(){const cnt=Math.max(GAME_UPDATES.length,(APPLIED&&APPLIED.updates)|0);return '<div class="card2"><h4>الإصدار '+EFF_VER+'</h4><p>عدد التحديثات التي تلعب بها: <b>'+cnt+'</b></p>'+GAME_UPDATES.slice().reverse().map(u=>'<p style="margin:10px 0 0"><b>'+u.v+' — '+esc2(u.t)+'</b></p>'+notesHTML(u.n)).join('')+'</div>'};
+if(!document.getElementById('updCss')){const st=document.createElement('style');st.id='updCss';st.textContent='@keyframes updSpin{to{transform:rotate(360deg)}}@keyframes updPulse{50%{transform:scale(1.18);filter:drop-shadow(0 0 18px #ffe08a)}}@keyframes updStripe{to{background-position:40px 0}}@keyframes updFlash{0%{opacity:.95}100%{opacity:0}}@keyframes updGlow{50%{box-shadow:0 0 34px #8c52ffcc,inset 0 0 14px #8c52ff66}}#updBox{position:relative;overflow:hidden}#updRing{width:92px;height:92px;margin:0 auto 12px;border-radius:50%;background:conic-gradient(from 0deg,#8c52ff,#ffe08a,#38e0ff,#8c52ff);-webkit-mask:radial-gradient(circle,transparent 56%,#000 58%);mask:radial-gradient(circle,transparent 56%,#000 58%);animation:updSpin 1.2s linear infinite}#updIcon{position:absolute;left:0;right:0;top:26px;font-size:40px;animation:updPulse 1s ease-in-out infinite}#updTrack{position:relative;height:20px;background:#150d2e;border:2px solid #5e3fd0;border-radius:12px;overflow:visible;animation:updGlow 1.4s ease-in-out infinite}#updFill{position:relative;height:100%;width:0;border-radius:9px;background:repeating-linear-gradient(115deg,#8c52ff 0 12px,#b98cff 12px 20px),#8c52ff;background-size:40px 100%;animation:updStripe .5s linear infinite;box-shadow:0 0 16px #8c52ff}#updBolt{position:absolute;top:50%;width:26px;height:26px;margin:-13px -13px 0 0;right:0;font-size:22px;line-height:26px;text-align:center;filter:drop-shadow(0 0 8px #ffe08a)}#updFlash{position:absolute;inset:0;background:#fff;pointer-events:none;opacity:0}';document.head.appendChild(st)}
+function panelBox(inner,id){const old=document.getElementById('gameForceUpdateOverlay');if(old)old.remove();const o=document.createElement('div');o.id='gameForceUpdateOverlay';o.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,#1a0f3d,#05030f 70%);z-index:999999;display:grid;place-items:center;font-family:Cairo,sans-serif;direction:rtl;color:#fff;padding:20px;overflow:auto';const pn=document.createElement('div');pn.id=id||'';pn.style.cssText='background:linear-gradient(#0d0918,#1a113a);border:2px solid #8c52ff;padding:26px;border-radius:20px;text-align:center;width:min(440px,100%);box-sizing:border-box;box-shadow:0 0 40px #8c52ff66;position:relative;z-index:2';pn.innerHTML=inner;o.appendChild(pn);document.body.appendChild(o);return pn}
 const BTN='margin-top:16px;background:linear-gradient(#8c52ff,#5e17eb);border:none;color:#fff;font-weight:900;padding:12px 30px;border-radius:12px;font-size:16px;cursor:pointer;font-family:inherit';
 async function checkGameUpdate(){
  try{const r=await fetch('./version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const d=await r.json();
-  if(d&&typeof d.version==='string'&&vNewer(d.version,CURRENT_GAME_VERSION))showUpdateModal(d)}
+  if(d&&typeof d.version==='string'&&vNewer(d.version,EFF_VER))showUpdateModal(d)}
  catch(e){console.log('تعذر فحص التحديثات')}}
 function showUpdateModal(d){
  const notes=Array.isArray(d.notes)?d.notes:[];
  const pn=panelBox('<h2 style="color:#b185ff;margin:0 0 8px;font-size:24px">🔔 تحديث جديد متوفر</h2><p style="color:#d9c8ee;margin:0">الإصدار '+esc2(d.version)+(d.updates?' • تحديث رقم '+esc2(d.updates):'')+'</p><p style="color:#d9c8ee;line-height:1.7;font-size:14px">'+esc2(d.message||'يتوفر تحديث جديد للعبة.')+'</p>'+(notes.length?'<div style="color:#ffe08a;font-weight:700;margin-top:6px">الإضافات الجديدة:</div>'+notesHTML(notes):'')+'<p style="color:#9b8cc0;font-size:12px;margin:12px 0 0">كل غنائمك وتجهيزاتك وتقدمك ستبقى كما هي.</p><button id="forceUpdateBtn" type="button" style="'+BTN+'">تحديث الآن ⬇</button>');
  pn.querySelector('#forceUpdateBtn').onclick=()=>startUpdate(d)}
 function startUpdate(d){
- const pn=panelBox('<h2 style="color:#b185ff;margin:0 0 14px">جاري تحميل التحديث…</h2><div style="height:14px;background:#2a1d4d;border-radius:8px;overflow:hidden"><div id="updBar" style="height:100%;width:0;background:linear-gradient(90deg,#8c52ff,#ffe08a);transition:width .2s"></div></div><p id="updPct" style="color:#d9c8ee;margin:10px 0 0">0%</p>');
+ const ov0=document.getElementById('gameForceUpdateOverlay');
+ const pn=panelBox('<div style="position:relative"><div id="updRing"></div><div id="updIcon">⚡</div></div><h2 style="color:#b185ff;margin:0 0 4px;font-size:22px">جاري تحميل التحديث</h2><div id="updTxt" style="color:#d9c8ee;font-size:13px;min-height:20px;margin-bottom:14px">تجهيز الملفات…</div><div id="updTrack"><div id="updFill"></div><div id="updBolt">⚡</div></div><div id="updPct" style="color:#ffe08a;font-weight:900;font-size:20px;margin-top:12px">0%</div><div style="color:#9b8cc0;font-size:12px;margin-top:6px">بياناتك محفوظة ولن تتأثر</div><div id="updFlash"></div>','updBox');
+ const ov=document.getElementById('gameForceUpdateOverlay'),cv=document.createElement('canvas');cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1';ov.appendChild(cv);
+ const cx=cv.getContext('2d'),dpr=window.devicePixelRatio||1;let W=cv.width=innerWidth*dpr,H=cv.height=innerHeight*dpr;const P=[];
+ /* حفظ التحديث المطلوب قبل إعادة التحميل — يمنع ظهور النافذة مرة ثانية */
+ lsSet(AKEY,{version:d.version,updates:d.updates|0,notes:Array.isArray(d.notes)?d.notes:[],message:d.message||'',at:Date.now(),shown:0});
  try{window.dispatchEvent(new Event('beforeunload'));window.dispatchEvent(new Event('pagehide'))}catch(e){}
  try{if(window.caches)caches.keys().then(k=>k.forEach(n=>caches.delete(n)))}catch(e){}
  try{if(navigator.serviceWorker)navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}catch(e){}
- let v=0;const bar=pn.querySelector('#updBar'),pct=pn.querySelector('#updPct');
- const t=setInterval(()=>{v=Math.min(100,v+4+Math.random()*7);bar.style.width=v+'%';pct.textContent=Math.floor(v)+'%';
-  if(v>=100){clearInterval(t);pct.textContent='تم التحميل ✓';setTimeout(()=>{const u=new URL(location.href);u.searchParams.set('game_update',Date.now());location.replace(u.toString())},350)}},120)}
-/* بعد التحديث: اعرض الإضافات الجديدة مرة واحدة */
+ const fill=pn.querySelector('#updFill'),bolt=pn.querySelector('#updBolt'),pct=pn.querySelector('#updPct'),txt=pn.querySelector('#updTxt'),flash=pn.querySelector('#updFlash'),track=pn.querySelector('#updTrack');
+ const ST=[[0,'تجهيز الملفات…'],[22,'تحميل الإضافات الجديدة…'],[50,'تثبيت التحديث…'],[78,'حفظ بياناتك وغنائمك…'],[95,'اللمسات الأخيرة…']];
+ let v=0,t0=performance.now(),done=false;const DUR=3600;
+ function spawn(n,x,y,big){for(let i=0;i<n;i++)P.push({x,y,vx:(Math.random()-.5)*(big?520:160)*dpr,vy:(-Math.random()*(big?420:220)-20)*dpr,l:.5+Math.random()*.6,m:1,c:Math.random()<.5?'#ffe08a':(Math.random()<.5?'#b98cff':'#38e0ff'),s:(1+Math.random()*2.4)*dpr})}
+ let last=t0;
+ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const e=Math.min(1,(now-t0)/DUR);v=100*(e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2);
+  fill.style.width=v+'%';pct.textContent=Math.floor(v)+'%';for(const s of ST)if(v>=s[0])txt.textContent=s[1];
+  const tr=track.getBoundingClientRect(),hx=(tr.right-(tr.width*v/100))*dpr,hy=(tr.top+tr.height/2)*dpr;
+  spawn(3,hx,hy,false);if(Math.random()<.12){const rr=pn.getBoundingClientRect();spawn(1,(rr.left+Math.random()*rr.width)*dpr,(rr.bottom)*dpr,false)}
+  cx.clearRect(0,0,W,H);cx.globalCompositeOperation='lighter';
+  for(let i=P.length-1;i>=0;i--){const q=P[i];q.l-=dt;if(q.l<=0){P.splice(i,1);continue}q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=260*dpr*dt;cx.globalAlpha=Math.min(1,q.l*2);cx.fillStyle=q.c;cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.283);cx.fill()}
+  cx.globalAlpha=1;
+  if(e<1)requestAnimationFrame(frame);else if(!done){done=true;fill.style.width='100%';pct.textContent='100%';txt.textContent='تم التثبيت ✓';pn.querySelector('h2').textContent='اكتمل التحديث!';bolt.style.display='none';
+   spawn(90,innerWidth*dpr/2,tr.top*dpr,true);flash.style.animation='updFlash .8s ease-out forwards';
+   const tick=n=>{const t=performance.now();const f2=t2=>{const dd=Math.min(.05,(t2-last)/1000);last=t2;cx.clearRect(0,0,W,H);for(let i=P.length-1;i>=0;i--){const q=P[i];q.l-=dd;if(q.l<=0){P.splice(i,1);continue}q.x+=q.vx*dd;q.y+=q.vy*dd;q.vy+=260*dpr*dd;cx.globalAlpha=Math.min(1,q.l*2);cx.fillStyle=q.c;cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.283);cx.fill()}if(t2-t<900)requestAnimationFrame(f2)};requestAnimationFrame(f2)};tick();
+   setTimeout(()=>{const u=new URL(location.href);u.searchParams.set('game_update',Date.now());location.replace(u.toString())},1000)}}
+ requestAnimationFrame(frame)}
+/* بعد التحديث: اعرض الإضافات الجديدة مرة واحدة، ونظّف رابط الصفحة */
 function showWhatsNew(){
- let seen=null;try{seen=localStorage.getItem(VKEY)}catch(e){}
- try{localStorage.setItem(VKEY,CURRENT_GAME_VERSION)}catch(e){}
- if(!seen||!vNewer(CURRENT_GAME_VERSION,seen))return;
+ try{const u=new URL(location.href);if(u.searchParams.has('game_update')){u.searchParams.delete('game_update');history.replaceState(null,'',u.pathname+u.search+u.hash)}}catch(e){}
+ const ap=lsGet(AKEY);
+ if(ap&&ap.version&&!ap.shown){ap.shown=1;lsSet(AKEY,ap);lsSet(VKEY,EFF_VER);
+  const n=(ap.notes&&ap.notes.length)?ap.notes:null;
+  const pn=panelBox('<h2 style="color:#ffe08a;margin:0 0 8px">✅ تم التحديث إلى '+esc2(ap.version)+'</h2><p style="color:#d9c8ee;margin:0 0 6px">بياناتك كلها محفوظة.'+(n?' الإضافات الجديدة:':'')+'</p>'+(n?notesHTML(n):'')+'<button id="wnOk" type="button" style="'+BTN+'">ابدأ اللعب</button>');
+  pn.querySelector('#wnOk').onclick=()=>document.getElementById('gameForceUpdateOverlay').remove();return}
+ let seen=lsGet(VKEY);lsSet(VKEY,EFF_VER);
+ if(!seen||!vNewer(EFF_VER,seen))return;
  const l=GAME_UPDATES.filter(u=>vNewer(u.v,seen));if(!l.length)return;
- const pn=panelBox('<h2 style="color:#ffe08a;margin:0 0 8px">✅ تم التحديث إلى '+CURRENT_GAME_VERSION+'</h2><p style="color:#d9c8ee;margin:0 0 6px">بياناتك كلها محفوظة. الإضافات الجديدة:</p>'+l.map(u=>'<p style="margin:10px 0 0;color:#b185ff"><b>'+esc2(u.t)+'</b></p>'+notesHTML(u.n)).join('')+'<button id="wnOk" type="button" style="'+BTN+'">ابدأ اللعب</button>');
+ const pn=panelBox('<h2 style="color:#ffe08a;margin:0 0 8px">✅ تم التحديث إلى '+EFF_VER+'</h2><p style="color:#d9c8ee;margin:0 0 6px">بياناتك كلها محفوظة. الإضافات الجديدة:</p>'+l.map(u=>'<p style="margin:10px 0 0;color:#b185ff"><b>'+esc2(u.t)+'</b></p>'+notesHTML(u.n)).join('')+'<button id="wnOk" type="button" style="'+BTN+'">ابدأ اللعب</button>');
  pn.querySelector('#wnOk').onclick=()=>document.getElementById('gameForceUpdateOverlay').remove()}
-window.addEventListener('load',()=>{setTimeout(()=>{showWhatsNew();checkGameUpdate()},1500)});
+window.addEventListener('load',()=>{setTimeout(()=>{showWhatsNew();if(!document.getElementById('gameForceUpdateOverlay'))checkGameUpdate()},1500)});
 </script>
 
 <script>
