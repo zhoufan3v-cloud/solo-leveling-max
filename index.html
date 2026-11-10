@@ -10787,7 +10787,7 @@ function secQuests(){
  '<div class="note" style="margin-top:14px">🛡️ حركة الدرع: Lv.1 طبقة واحدة وتخفيف ضرر 20% • Lv.2 طبقتان وتخفيف 30% • Lv.3 ثلاث طبقات وتخفيف 40%.<br>🍃 تحدي الإرجاع: أي ضربة تنقص صحتك تفشل المحاولة، حتى لو لم تمت. يجب بدء وادي الرمال من جديد والمحافظة على الصحة دون أي إصابة حتى هزيمة قائد محاربي الصحراء.</div>';
 }
 function secSet(){return '<div class="set"><label for="smmute">كتم الصوت</label><input type="checkbox" id="smmute" '+(SM.isMuted()?'checked':'')+'></div><div class="set"><label for="smvol">مستوى الصوت</label><input type="range" id="smvol" min="0" max="100" value="'+Math.round(S.vol*100)+'"></div><button class="btn" data-act="mclose">رجوع إلى اللوبي</button>'}
-function secAbout(){return '<div class="card2"><h4>SOLO MAX 100</h4><p>لعبة مغامرات قتالية بطابع الأنمي والفانتازيا. هذه نسخة تجريبية مبكرة تحتوي حاليًا على مرحلة واحدة: كهف البلورات.</p><p>التحكم: WASD أو الأسهم للحركة • V صد مثالي • J/Space سيف • K كرة نار • U صقيع (أو المفاتيح 1–4 حسب خانات المهارات المجهزة) • E جرعة شفاء • Q تبديل السلاح • Z نوع السهم • Shift اندفاع • P إيقاف مؤقت.</p><p style="color:#8f80a8">لا يوجد حفظ دائم للتقدم في هذه النسخة.</p></div>'}
+function secAbout(){return (window.__aboutVer?window.__aboutVer():'')+'<div class="card2"><h4>SOLO MAX 100</h4><p>لعبة مغامرات قتالية بطابع الأنمي والفانتازيا. هذه نسخة تجريبية مبكرة تحتوي حاليًا على مرحلة واحدة: كهف البلورات.</p><p>التحكم: WASD أو الأسهم للحركة • V صد مثالي • J/Space سيف • K كرة نار • U صقيع (أو المفاتيح 1–4 حسب خانات المهارات المجهزة) • E جرعة شفاء • Q تبديل السلاح • Z نوع السهم • Shift اندفاع • P إيقاف مؤقت.</p><p style="color:#8f80a8">لا يوجد حفظ دائم للتقدم في هذه النسخة.</p></div>'}
 function secGuide(){const G=SM.guide();return '<div class="note">الأرقام مأخوذة مباشرة من نظام القتال (قبل دفاعك ومعداتك وفرق اللفل).</div><div class="grid g2">'+G.map(g=>'<div class="card2"><h4>'+g.name+' <small style="color:#ffcf4a">'+g.rank+'</small></h4><p>'+g.stages+' • لفل '+g.lv[0]+'–'+g.lv[1]+'<br>الصحة: '+g.hp[0]+' (→ '+g.hp[1]+(g.hp[2]!==g.hp[1]?'–'+g.hp[2]:'')+')'+(g.shield?'<br>الدرع: '+g.shield:'')+'<br>الخبرة: '+g.xp[0]+(g.xp[1]!==g.xp[0]?'–'+g.xp[1]:'')+'</p>'+g.skills.map(k=>'<p style="font-size:12px;color:#cbb8e0">• '+k.n+': ضرر '+k.dmg+' • مدى '+k.r[0]+'–'+k.r[1]+' • تحضير '+k.w+'ث • انتظار '+k.cd+'ث'+(k.hits>1?' • '+k.hits+' ضربات':'')+'</p>').join('')+'</div>').join('')+'</div>'}
 /* ===== تزيينات المتجر: شكلية فقط، مستقلة تمامًا عن المعدات والإحصائيات ===== */
 S.cown={};S.ctab='hair';S.cpv=null;
@@ -12875,65 +12875,47 @@ window.TOWER={open:openTower,state:()=>S,cfg:TW_CFG,floors:FLOORS};
 
 </script>
 <script>
-/* SOLO MAX 100 — نظام فحص التحديثات */
-const CURRENT_GAME_VERSION = "1.0.0";
-
-async function checkGameUpdate() {
-    try {
-        const response = await fetch('./version.json?t=' + Date.now(), {
-            cache: 'no-store'
-        });
-        if (!response.ok) return;
-
-        const data = await response.json();
-        if (data && typeof data.version === 'string' &&
-            data.version !== CURRENT_GAME_VERSION) {
-            showUpdateModal(data.message || 'يتوفر تحديث جديد للعبة.');
-        }
-    } catch (e) {
-        console.log("تعذر الفحص حالياً.");
-    }
-}
-
-function showUpdateModal(msg) {
-    if (document.getElementById('gameForceUpdateOverlay')) return;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'gameForceUpdateOverlay';
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(5,3,15,0.95);z-index:999999;display:grid;place-items:center;font-family:Cairo,sans-serif;direction:rtl;color:#fff;padding:20px;";
-
-    const panel = document.createElement('div');
-    panel.style.cssText = "background:linear-gradient(#0d0918,#1a113a);border:2px solid #8c52ff;padding:28px;border-radius:20px;text-align:center;width:min(420px,100%);box-sizing:border-box;box-shadow:0 0 50px #8c52ff55;";
-
-    const heading = document.createElement('h2');
-    heading.textContent = '⚡ [تنبيه النظام]: تحديث إجباري';
-    heading.style.cssText = 'color:#b185ff;margin-top:0;font-size:24px;';
-
-    const message = document.createElement('p');
-    message.textContent = String(msg);
-    message.style.cssText = 'color:#d9c8ee;line-height:1.7;font-size:14px;';
-
-    const button = document.createElement('button');
-    button.id = 'forceUpdateBtn';
-    button.type = 'button';
-    button.textContent = 'تحديث الآن 🚀';
-    button.style.cssText = 'margin-top:16px;background:linear-gradient(#8c52ff,#5e17eb);border:none;color:#fff;font-weight:900;padding:12px 30px;border-radius:12px;font-size:16px;cursor:pointer;box-shadow:0 0 20px #8c52ffaa;';
-
-    panel.append(heading, message, button);
-    overlay.appendChild(panel);
-    document.body.appendChild(overlay);
-
-    button.addEventListener('click', () => {
-        // إضافة رقم الإصدار إلى الرابط لتجاوز نسخة الصفحة المخزنة مؤقتاً.
-        const url = new URL(window.location.href);
-        url.searchParams.set('game_update', Date.now().toString());
-        window.location.replace(url.toString());
-    });
-}
-
-window.addEventListener('load', () => {
-    setTimeout(checkGameUpdate, 1500);
-});
+/* SOLO MAX 100 — نظام التحديثات: الإصدار الحالي + سجل التحديثات + فحص إصدار جديد + شاشة تحميل */
+const CURRENT_GAME_VERSION = "1.3.0";
+const GAME_UPDATES = [
+ {v:"1.1.0",t:"تطوير الزعماء",n:["كل زعيم لفله 10 أو أقل: 3 ضربات و4 مهارات على الأقل","تزيد الضربات والمهارات وصعوبة التفادي مع رفع اللفل","شريط دم زعيم البرج يظهر أعلى الوسط"]},
+ {v:"1.2.0",t:"برج التحديات 16–20",n:["5 طوابق جديدة في الصحراء والعناكب","زعماء: حارس العش، ملك العقارب، ساحر الرمال، فارس العناكب الأسود، ملكة العناكب"]},
+ {v:"1.3.0",t:"نظام التحديثات",n:["خانة «حول اللعبة» تعرض الإصدار وعدد التحديثات","إشعار عند صدور تحديث جديد مع شاشة تحميل","تبقى كل بياناتك وغنائمك وتجهيزاتك كما هي"]}
+];
+const VKEY='solomax100_game_version_seen';
+const vNum=v=>String(v).split('.').map(x=>parseInt(x)||0);
+const vNewer=(a,b)=>{const A=vNum(a),B=vNum(b);for(let i=0;i<3;i++){if((A[i]||0)!==(B[i]||0))return(A[i]||0)>(B[i]||0)}return false};
+const esc2=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const notesHTML=l=>'<ul style="margin:8px 0 0;padding:0 18px 0 0;text-align:right;color:#d9c8ee;font-size:13px;line-height:1.8">'+l.map(x=>'<li>'+esc2(x)+'</li>').join('')+'</ul>';
+/* خانة حول اللعبة: الإصدار + عدد التحديثات + السجل */
+window.__aboutVer=function(){return '<div class="card2"><h4>الإصدار '+CURRENT_GAME_VERSION+'</h4><p>عدد التحديثات التي تلعب بها: <b>'+GAME_UPDATES.length+'</b></p>'+GAME_UPDATES.slice().reverse().map(u=>'<p style="margin:10px 0 0"><b>'+u.v+' — '+esc2(u.t)+'</b></p>'+notesHTML(u.n)).join('')+'</div>'};
+function panelBox(inner){const old=document.getElementById('gameForceUpdateOverlay');if(old)old.remove();const o=document.createElement('div');o.id='gameForceUpdateOverlay';o.style.cssText='position:fixed;inset:0;background:rgba(5,3,15,.95);z-index:999999;display:grid;place-items:center;font-family:Cairo,sans-serif;direction:rtl;color:#fff;padding:20px;overflow:auto';const pn=document.createElement('div');pn.style.cssText='background:linear-gradient(#0d0918,#1a113a);border:2px solid #8c52ff;padding:26px;border-radius:20px;text-align:center;width:min(440px,100%);box-sizing:border-box;box-shadow:0 0 40px #8c52ff66';pn.innerHTML=inner;o.appendChild(pn);document.body.appendChild(o);return pn}
+const BTN='margin-top:16px;background:linear-gradient(#8c52ff,#5e17eb);border:none;color:#fff;font-weight:900;padding:12px 30px;border-radius:12px;font-size:16px;cursor:pointer;font-family:inherit';
+async function checkGameUpdate(){
+ try{const r=await fetch('./version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const d=await r.json();
+  if(d&&typeof d.version==='string'&&vNewer(d.version,CURRENT_GAME_VERSION))showUpdateModal(d)}
+ catch(e){console.log('تعذر فحص التحديثات')}}
+function showUpdateModal(d){
+ const notes=Array.isArray(d.notes)?d.notes:[];
+ const pn=panelBox('<h2 style="color:#b185ff;margin:0 0 8px;font-size:24px">🔔 تحديث جديد متوفر</h2><p style="color:#d9c8ee;margin:0">الإصدار '+esc2(d.version)+(d.updates?' • تحديث رقم '+esc2(d.updates):'')+'</p><p style="color:#d9c8ee;line-height:1.7;font-size:14px">'+esc2(d.message||'يتوفر تحديث جديد للعبة.')+'</p>'+(notes.length?'<div style="color:#ffe08a;font-weight:700;margin-top:6px">الإضافات الجديدة:</div>'+notesHTML(notes):'')+'<p style="color:#9b8cc0;font-size:12px;margin:12px 0 0">كل غنائمك وتجهيزاتك وتقدمك ستبقى كما هي.</p><button id="forceUpdateBtn" type="button" style="'+BTN+'">تحديث الآن ⬇</button>');
+ pn.querySelector('#forceUpdateBtn').onclick=()=>startUpdate(d)}
+function startUpdate(d){
+ const pn=panelBox('<h2 style="color:#b185ff;margin:0 0 14px">جاري تحميل التحديث…</h2><div style="height:14px;background:#2a1d4d;border-radius:8px;overflow:hidden"><div id="updBar" style="height:100%;width:0;background:linear-gradient(90deg,#8c52ff,#ffe08a);transition:width .2s"></div></div><p id="updPct" style="color:#d9c8ee;margin:10px 0 0">0%</p>');
+ try{window.dispatchEvent(new Event('beforeunload'));window.dispatchEvent(new Event('pagehide'))}catch(e){}
+ try{if(window.caches)caches.keys().then(k=>k.forEach(n=>caches.delete(n)))}catch(e){}
+ try{if(navigator.serviceWorker)navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}catch(e){}
+ let v=0;const bar=pn.querySelector('#updBar'),pct=pn.querySelector('#updPct');
+ const t=setInterval(()=>{v=Math.min(100,v+4+Math.random()*7);bar.style.width=v+'%';pct.textContent=Math.floor(v)+'%';
+  if(v>=100){clearInterval(t);pct.textContent='تم التحميل ✓';setTimeout(()=>{const u=new URL(location.href);u.searchParams.set('game_update',Date.now());location.replace(u.toString())},350)}},120)}
+/* بعد التحديث: اعرض الإضافات الجديدة مرة واحدة */
+function showWhatsNew(){
+ let seen=null;try{seen=localStorage.getItem(VKEY)}catch(e){}
+ try{localStorage.setItem(VKEY,CURRENT_GAME_VERSION)}catch(e){}
+ if(!seen||!vNewer(CURRENT_GAME_VERSION,seen))return;
+ const l=GAME_UPDATES.filter(u=>vNewer(u.v,seen));if(!l.length)return;
+ const pn=panelBox('<h2 style="color:#ffe08a;margin:0 0 8px">✅ تم التحديث إلى '+CURRENT_GAME_VERSION+'</h2><p style="color:#d9c8ee;margin:0 0 6px">بياناتك كلها محفوظة. الإضافات الجديدة:</p>'+l.map(u=>'<p style="margin:10px 0 0;color:#b185ff"><b>'+esc2(u.t)+'</b></p>'+notesHTML(u.n)).join('')+'<button id="wnOk" type="button" style="'+BTN+'">ابدأ اللعب</button>');
+ pn.querySelector('#wnOk').onclick=()=>document.getElementById('gameForceUpdateOverlay').remove()}
+window.addEventListener('load',()=>{setTimeout(()=>{showWhatsNew();checkGameUpdate()},1500)});
 </script>
 
 <script>
