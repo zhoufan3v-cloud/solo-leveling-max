@@ -774,7 +774,7 @@ footer{padding:5px 12px;background:#151024;color:#9f90b6;font-size:11px;display:
 <div id="smmodal"><div class="frame" role="dialog" aria-modal="true"><div class="fh"><h3 id="smmt"></h3><button class="x" id="smx">✕ إغلاق</button></div><div class="fb" id="smmb"></div></div></div>
 </div>
 
-<script>window.ONE_HIT_TEST=true;
+<script>
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
@@ -2058,7 +2058,7 @@ function bossAI(e,dt,sp,d,dx,dy){
 }
 
 function hurtEnemy(e,dmg,o){
-  o=o||{};if(e.spawn>0||e.dead||e.dying)return false;if(window.ONE_HIT_TEST!==false){e.guard=0;e.hp=Math.min(e.hp,1);dmg=Math.max(dmg,99999)}if(window.SM&&window.SM.mythicDamageMultiplier)dmg*=window.SM.mythicDamageMultiplier(e,o);if(e.df&&!(e.kind==='boss'&&e.guard>0))dmg/=e.df;
+  o=o||{};if(e.spawn>0||e.dead||e.dying)return false;if(window.SM&&window.SM.mythicDamageMultiplier)dmg*=window.SM.mythicDamageMultiplier(e,o);if(e.df&&!(e.kind==='boss'&&e.guard>0))dmg/=e.df;
   const crit=o.noCrit?false:Math.random()<.12;if(window.SM&&window.SM.onMythicHit)window.SM.onMythicHit(e,o,crit);if(crit)dmg*=1.8;let sh=0;
   if(e.state==='recover'&&e.kind!=='boss')dmg*=1.2;
   if(e.kind==='boss'&&e.guard>0){const w=(e.sw&&o.elem&&e.sw[o.elem])||1,gd=Math.round(dmg*(o.gmul||1)*w);sh=gd;dmg=0;shHitFx(e,w>1);guardDmg(e,gd);e.gT=Math.max(e.gT,1.2)}
